@@ -1,27 +1,30 @@
-import { Link } from "react-router"; // Import Link for SPA navigation
-import { LayoutDashboard } from 'lucide-react';
+import React from 'react';
+import { Link } from 'react-router';
 
-function Navbar() {
+const Navbar = () => {
   return (
-    <nav className="flex justify-between items-center px-10 py-4 bg-white/80 backdrop-blur-md border-b border-zinc-200/50 sticky top-0 z-50">
-      <div className="flex items-center gap-2">
-        <LayoutDashboard size={24} className="text-blue-600" />
-        <h2 className="text-xl font-bold text-zinc-900 tracking-tight">SaaS Dashboard AI</h2>
-      </div>
-      <div className="flex items-center gap-4">
-        {/* Link to the Login page defined in App.js */}
-        <Link 
-          to="/login" 
-          className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors px-4 py-2"
-        >
-          Login
-        </Link>
-        <button className="bg-zinc-900 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-800 transition-all shadow-lg active:scale-95">
-          Get Started
-        </button>
+    <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-6xl">
+      <div className="bg-slate-900/40 backdrop-blur-md border border-white/10 px-8 py-4 rounded-3xl flex items-center justify-between shadow-2xl">
+        {/* Logo Section */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <span className="text-white font-black text-xs">H</span>
+          </div>
+          <span className="text-xl font-bold tracking-tighter text-white">Hisab<span className="text-cyan-400">.ai</span></span>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-6">
+          <Link to="/login" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">
+            Login
+          </Link>
+          <button className="bg-white text-slate-950 px-5 py-2 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all active:scale-95">
+            Get Started
+          </button>
+        </div>
       </div>
     </nav>
   );
-}
+};
 
 export default Navbar;

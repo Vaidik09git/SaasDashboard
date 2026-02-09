@@ -1,73 +1,64 @@
-import React from 'react';
-import { Upload, FileText, CheckCircle } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Upload } from 'lucide-react';
 
 function UploadCard({ title, description, accept }) {
-  const [fileName, setFileName] = React.useState("");
+  const fileInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleTriggerClick = (e) => {
+    e.stopPropagation();
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
     if (file) {
-      setFileName(file.name);
+      console.log("Selected file:", file.name);
     }
   };
 
   return (
-    <div style={styles.card}>
-      <div style={styles.iconCircle}>
-        <Upload size={32} color="#2563eb" />
-      </div>
-      <h3 style={styles.title}>{title}</h3>
-      <p style={styles.desc}>{description}</p>
+    <div className="flex flex-col items-center w-full">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept={accept}
+        className="hidden"
+      />
 
-      <label style={styles.uploadArea}>
-        <input
-          type="file"
-          accept={accept}
-          onChange={handleFileChange}
-          style={{ display: 'none' }} 
-        />
-        {fileName ? (
-          <div style={styles.fileSelected}>
-            <CheckCircle size={18} color="#059669" />
-            <span>{fileName}</span>
-          </div>
-        ) : (
-          "Select File from Computer"
-        )}
-      </label>
+      {/* Trigger: Icon */}
+      <div 
+        onClick={handleTriggerClick}
+        className="bg-white p-4 rounded-full mb-6 cursor-pointer hover:scale-110 transition-transform shadow-xl"
+      >
+        <Upload size={32} className="text-blue-600" />
+      </div>
+
+      <h3 className="text-white text-xl font-bold mb-2 tracking-tight">
+        {title || "Secure Upload"}
+      </h3>
+      
+      <p className="text-zinc-500 text-sm mb-8 text-center px-4">
+        {description || "Supports CSV, Excel, Word, and PDF"}
+      </p>
+
+      {/* Trigger: Button */}
+      <button 
+        onClick={handleTriggerClick}
+        className="w-full py-3 px-6 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors active:scale-95"
+      >
+        Select File from Computer
+      </button>
+
+      {/* Internal Component Footer */}
+      <div className="w-full mt-8 pt-6 border-t border-white/5 flex items-center justify-center gap-2">
+        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+        <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-bold">
+          AI Pipeline Ready
+        </span>
+      </div>
     </div>
   );
 }
-
-const styles = {
-  card: {
-    padding: "32px",
-    textAlign: "center",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  iconCircle: {
-    background: "#eff6ff",
-    padding: "20px",
-    borderRadius: "50%",
-    marginBottom: "16px",
-  },
-  title: { fontSize: "20px", fontWeight: "600", marginBottom: "8px", color: "#111" },
-  desc: { color: "#666", marginBottom: "24px", fontSize: "14px" },
-  uploadArea: {
-    border: "2px dashed #cbd5e1",
-    borderRadius: "8px",
-    padding: "16px 24px",
-    cursor: "pointer",
-    width: "100%",
-    transition: "all 0.2s",
-    fontSize: "14px",
-    fontWeight: "500",
-    color: "#475569",
-    backgroundColor: "#f8fafc"
-  },
-  fileSelected: { display: "flex", alignItems: "center", gap: "8px", color: "#059669" }
-};
 
 export default UploadCard;
