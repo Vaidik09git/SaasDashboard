@@ -3,37 +3,28 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const auth = require('../middleware/auth');
 
-router.get('/user', auth, async (req, res) => {
-  try {
-    // req.user is attached by the auth middleware
-    const user = await User.findById(req.user).select('-password');
-    
-    // Logic to determine if user is 'New' (e.g., joined in last 24 hours)
-    const isNew = (Date.now() - new Date(user.createdAt).getTime()) < 86400000;
-
-    res.json({
-      name: user.name,
-      occupation: user.occupation,
-      isNew: isNew
-    });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
 // REGISTER ROUTE
 router.post('/register', async (req, res) => {
   try {
     const { name, username, email, password, occupation } = req.body;
 
-    let user = await User.findOne({ $or: [{ username }, { email }] });
-    if (user) return res.status(400).json({ msg: "User or Email already exists" });
+    // 1. Validate required fields
+    if (!name || !username || !email || !password || !occupation) {
+      return res.status(400).json({ msg: "Please enter all fields" });
+    }
 
+    // 2. Check if user already exists
+    let user = await User.findOne({ $or: [{ username }, { email }] });
+    if (user) {
+      return res.status(400).json({ msg: "This user or email is already registered." });
+    }
+
+    // 3. Hash Password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // 4. Create User Instance
     user = new User({
       name,
       username,
@@ -42,48 +33,62 @@ router.post('/register', async (req, res) => {
       occupation
     });
 
-    await user.save();
+    // 5. Save to MongoDB
+    await user.save(); 
     
-    // Create Token so they are logged in immediately
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
-    res.json({ token, user: { name: user.name, isNew: true } });
+    // 6. Generate Token
+    const secret = process.env.JWT_SECRET || 'fallback_secret_for_dev_only';
+    
+    const token = jwt.sign(
+      { id: user._id }, 
+      secret, 
+      { expiresIn: '24h' }
+    );
+    
+    // 7. Return success
+    return res.status(201).json({ 
+      token, 
+      user: { name: user.name, isNew: true },
+      msg: "Registration Successful" 
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("CRITICAL REGISTER ERROR:", err); 
+    res.status(500).json({ error: "Server Error: " + err.message });
   }
 });
 
-// LOGIN ROUTE (Update lastLogin)
-// LOGIN ROUTE 
+// LOGIN ROUTE - FIXED SYNTAX ERROR HERE
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         
         // Find user in MongoDB
         const user = await User.findOne({ username });
-        if (!user) return res.status(400).json({ msg: "User does not exist" });
+        if (!user) return res.status(400).json({ msg: "User does not exist. Please register first." });
 
-        // Validate password
+        // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
-        // Update lastLogin in MongoDB to help determine "Welcome Back" status
-        const lastLoginDate = user.lastLogin;
+        // Update login timestamp
         user.lastLogin = Date.now();
         await user.save();
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        // Sign Token
+        const secret = process.env.JWT_SECRET || 'fallback_secret_for_dev_only';
+        const token = jwt.sign({ id: user._id }, secret, { expiresIn: '24h' });
 
-        // Send database details to frontend
+        // Return user data with isNew: false for "Welcome Back" greeting
         res.json({ 
             token, 
             user: { 
                 name: user.name, 
-                // Logic: If user was created within the last 5 minutes, treat as "New"
-                isNew: (Date.now() - user.createdAt) < 300000 
+                isNew: false 
             } 
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("LOGIN ERROR:", err);
+        res.status(500).json({ error: "Server Error during login" });
     }
 });
 

@@ -5,31 +5,28 @@ import UploadCard from "../Components/UploadCard.js";
 import BusinessBackground from "../Components/BusinessBackground.js";
 
 function LandingPage() {
-  // Starts as 'false' so the sidebar is collapsed by default
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // Greeting states
   const [greeting, setGreeting] = useState('Welcome');
   const [subText, setSubText] = useState('Modern intelligence for your business ledgers.');
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   useEffect(() => {
-    // Attempt to fetch user data from local storage (set during login/register)
+    // Retrieve the user object stored during Login/Register
     const storedUser = JSON.parse(localStorage.getItem('user'));
     
     if (storedUser && storedUser.name) {
-      if (storedUser.isNew) {
-        // State for newly registered users
-        setGreeting(`Welcome, ${storedUser.name}!`);
-        setSubText('We are excited to help you manage your business.');
+      if (storedUser.isNew === true) {
+        // Registered for the first time
+        setGreeting(`Welcome, ${storedUser.name}`);
+        setSubText('How can I help you today?');
       } else {
-        // State for existing users logging back in
+        // Returning user logging back in
         setGreeting(`Welcome back, ${storedUser.name}`);
         setSubText('How should I assist you today?');
       }
     } else {
-      // Default state before any login has occurred
+      // Default for guests
       setGreeting('Welcome');
       setSubText('Modern intelligence for your business ledgers.');
     }
@@ -39,14 +36,11 @@ function LandingPage() {
     <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans">
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      {/* Dynamic margin based on sidebar state */}
       <div className={`flex-1 transition-all duration-300 ease-in-out relative z-10 flex flex-col ${isSidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <BusinessBackground />
         <Navbar />
 
         <main className="flex-1 flex flex-col items-center pt-32 pb-20 px-10">
-          
-          {/* Personalized Greeting Header */}
           <div className="text-center mb-16 animate-section">
             <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
               {greeting}
