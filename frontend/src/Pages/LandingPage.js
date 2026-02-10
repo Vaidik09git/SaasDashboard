@@ -1,44 +1,68 @@
+import React, { useState, useEffect } from 'react';
+import Sidebar from "../Components/Sidebar.js";
 import Navbar from "../Components/Navbar.js";
 import UploadCard from "../Components/UploadCard.js";
 import BusinessBackground from "../Components/BusinessBackground.js";
 
 function LandingPage() {
-  return (
-    <div className="min-h-screen bg-[#030712] text-white overflow-hidden relative">
-      <BusinessBackground />
+  // Starts as 'false' so the sidebar is collapsed by default
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Greeting states
+  const [greeting, setGreeting] = useState('Welcome');
+  const [subText, setSubText] = useState('Modern intelligence for your business ledgers.');
 
-      <div className="relative z-10 flex flex-col items-center">
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  useEffect(() => {
+    // Attempt to fetch user data from local storage (set during login/register)
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    
+    if (storedUser && storedUser.name) {
+      if (storedUser.isNew) {
+        // State for newly registered users
+        setGreeting(`Welcome, ${storedUser.name}!`);
+        setSubText('We are excited to help you manage your business.');
+      } else {
+        // State for existing users logging back in
+        setGreeting(`Welcome back, ${storedUser.name}`);
+        setSubText('How should I assist you today?');
+      }
+    } else {
+      // Default state before any login has occurred
+      setGreeting('Welcome');
+      setSubText('Modern intelligence for your business ledgers.');
+    }
+  }, []);
+
+  return (
+    <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans">
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+
+      {/* Dynamic margin based on sidebar state */}
+      <div className={`flex-1 transition-all duration-300 ease-in-out relative z-10 flex flex-col ${isSidebarOpen ? 'ml-72' : 'ml-20'}`}>
+        <BusinessBackground />
         <Navbar />
 
-        <main className="w-full max-w-5xl mx-auto pt-44 pb-20 px-6 flex flex-col items-center">
+        <main className="flex-1 flex flex-col items-center pt-32 pb-20 px-10">
           
-          {/* Multi-layered Glow System */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -z-10 animate-pulse" />
-          <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
-
-          {/* Typography: Larger and more modern */}
-          <div className="text-center mb-20">
-            <h1 className="text-7xl md:text-8xl font-black tracking-tightest mb-6 leading-none">
-              <span className="bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent italic">Analyze. </span>
-              <span className="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">Optimise.</span>
-            </h1>
-            <p className="text-slate-400 text-lg md:text-xl max-w-xl mx-auto leading-relaxed font-medium">
-              The next-generation ledger for serious businesses. 
-              Upload files to see <span className="text-white">Hisab.ai</span> in action.
+          {/* Personalized Greeting Header */}
+          <div className="text-center mb-16 animate-section">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+              {greeting}
+            </h2>
+            <p className="text-slate-500 font-medium mb-8">
+              {subText}
             </p>
+
+            <h1 className="text-6xl md:text-7xl font-black tracking-tightest mb-4 leading-none text-slate-900">
+              Analyze. <span className="bg-gradient-to-r from-cyan-600 to-emerald-600 bg-clip-text text-transparent italic">Optimise.</span>
+            </h1>
           </div>
 
-          {/* Upload Card: Extra Glassy */}
           <div className="w-full max-w-lg relative group">
-            {/* Ambient Border Glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/40 to-indigo-500/40 rounded-[3rem] blur-xl opacity-20 group-hover:opacity-60 transition duration-1000" />
-            
-            <div className="relative bg-slate-900/30 border border-white/5 p-12 rounded-[2.5rem] backdrop-blur-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]">
-              <UploadCard
-                title="Secure Data Vault"
-                description="Process P&L, EBITDA, and CAGR metrics instantly."
-                accept=".csv, .xls, .xlsx, .pdf"
-              />
+            <div className="relative bg-white/70 border-2 border-white p-12 rounded-[3rem] backdrop-blur-3xl shadow-2xl">
+              <UploadCard />
             </div>
           </div>
         </main>

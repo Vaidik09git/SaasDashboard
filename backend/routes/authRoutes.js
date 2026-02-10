@@ -1,35 +1,90 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs'); // Step 2: Hashing tool
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Step 1: Import the Model
+const User = require('../models/User');
+const auth = require('../middleware/auth');
 
+router.get('/user', auth, async (req, res) => {
+  try {
+    // req.user is attached by the auth middleware
+    const user = await User.findById(req.user).select('-password');
+    
+    // Logic to determine if user is 'New' (e.g., joined in last 24 hours)
+    const isNew = (Date.now() - new Date(user.createdAt).getTime()) < 86400000;
+
+    res.json({
+      name: user.name,
+      occupation: user.occupation,
+      isNew: isNew
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 // REGISTER ROUTE
 router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { name, username, email, password, occupation } = req.body;
 
-    // Check if user already exists
-    let user = await User.findOne({ username });
-    if (user) return res.status(400).json({ msg: "User already exists" });
+    let user = await User.findOne({ $or: [{ username }, { email }] });
+    if (user) return res.status(400).json({ msg: "User or Email already exists" });
 
-    // Step 2: Hashing the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Step 3: Prepare the new User object
     user = new User({
+      name,
       username,
-      password: hashedPassword // Save the hashed version, not plain text
+      email,
+      password: hashedPassword,
+      occupation
     });
 
-    // Step 4: Save Command
-    await user.save(); // Pushes data to your 'login' database in MongoDB
-
-    res.json({ msg: "User registered successfully in 'login' database!" });
+    await user.save();
+    
+    // Create Token so they are logged in immediately
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    res.json({ token, user: { name: user.name, isNew: true } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// LOGIN ROUTE (Update lastLogin)
+// LOGIN ROUTE 
+router.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        // Find user in MongoDB
+        const user = await User.findOne({ username });
+        if (!user) return res.status(400).json({ msg: "User does not exist" });
+
+        // Validate password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+
+        // Update lastLogin in MongoDB to help determine "Welcome Back" status
+        const lastLoginDate = user.lastLogin;
+        user.lastLogin = Date.now();
+        await user.save();
+
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+
+        // Send database details to frontend
+        res.json({ 
+            token, 
+            user: { 
+                name: user.name, 
+                // Logic: If user was created within the last 5 minutes, treat as "New"
+                isNew: (Date.now() - user.createdAt) < 300000 
+            } 
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 module.exports = router;
