@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router'; 
 import Sidebar from "../Components/Sidebar.js";
 import Navbar from "../Components/Navbar.js";
 import UploadCard from "../Components/UploadCard.js";
 import BusinessBackground from "../Components/BusinessBackground.js";
 
 function LandingPage() {
+  const navigate = useNavigate(); 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [greeting, setGreeting] = useState('Welcome');
   const [subText, setSubText] = useState('Modern intelligence for your business ledgers.');
   
-  // NEW: State for only Revenue and OpEx
+  // State for persistent Revenue and OpEx
   const [isFileUploaded, setIsFileUploaded] = useState(false);
   const [analysisData, setAnalysisData] = useState({
     revenue: null,
@@ -19,6 +21,7 @@ function LandingPage() {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   useEffect(() => {
+    // 1. Maintain existing User Greeting logic
     const storedUser = JSON.parse(localStorage.getItem('user'));
     if (storedUser && storedUser.name) {
       if (storedUser.isNew === true) {
@@ -29,20 +32,36 @@ function LandingPage() {
         setSubText('How should I assist you today?');
       }
     }
+
+    // 2. NEW: Check for existing analysis data to keep cards visible
+    const savedRevenue = localStorage.getItem('analyzed_revenue');
+    const savedOpEx = localStorage.getItem('analyzed_opex');
+    
+    if (savedRevenue && savedOpEx) {
+      setIsFileUploaded(true);
+      setAnalysisData({
+        revenue: parseFloat(savedRevenue),
+        opex: parseFloat(savedOpEx)
+      });
+    }
   }, []);
 
-  // Capture only the specific performance data needed for homepage
+  // Updated to handle both initial upload and persistent storage
   const handleUploadSuccess = (data) => {
     setIsFileUploaded(true);
     setAnalysisData({
       revenue: data.revenue,
       opex: data.opex
     });
+
+    // Auto-redirect to performance page
+    setTimeout(() => {
+      navigate('/performance');
+    }, 1500);
   };
 
   return (
     <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans">
-      {/* Existing Sidebar remains untouched */}
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isFileUploaded={isFileUploaded} />
 
       <div className={`flex-1 transition-all duration-300 ease-in-out relative z-10 flex flex-col ${isSidebarOpen ? 'ml-72' : 'ml-20'}`}>
@@ -51,7 +70,7 @@ function LandingPage() {
 
         <main className="flex-1 flex flex-col items-center pt-32 pb-20 px-10">
           
-          {/* Homepage KPIs: Showing Revenue and OpEx ONLY */}
+          {/* Persistent Homepage KPIs: Only Revenue and OpEx */}
           {analysisData.revenue !== null && (
             <div className="w-full max-w-2xl mb-12 animate-section grid grid-cols-1 md:grid-cols-2 gap-6">
               
@@ -73,7 +92,7 @@ function LandingPage() {
                 <div>
                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Total OpEx</p>
                   <h3 className="text-4xl font-black text-slate-900">
-                    ${analysisData.opex ? analysisData.opex.toLocaleString() : "0"}
+                    ${analysisData.opex.toLocaleString()}
                   </h3>
                 </div>
                 <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500">

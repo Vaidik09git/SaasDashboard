@@ -16,7 +16,6 @@ function RegisterPage() {
       
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
-        // Save name and isNew: true flag
         localStorage.setItem("user", JSON.stringify({ 
           name: res.data.user.name, 
           isNew: true 
@@ -36,20 +35,16 @@ function RegisterPage() {
       <form onSubmit={handleRegister} className="bg-zinc-900/40 p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-2xl relative z-10 shadow-2xl">
         <h2 className="text-white text-3xl font-black mb-6 text-center tracking-tight">Create Account</h2>
         <div className="space-y-4">
-          <input className="w-full p-3 rounded-xl bg-zinc-800/50 border border-white/5 text-white outline-none focus:border-cyan-500" placeholder="Full Name" required onChange={(e) => setFormData({...formData, name: e.target.value})} />
-          <input className="w-full p-3 rounded-xl bg-zinc-800/50 border border-white/5 text-white outline-none focus:border-cyan-500" placeholder="Username" required onChange={(e) => setFormData({...formData, username: e.target.value})} />
-          <input className="w-full p-3 rounded-xl bg-zinc-800/50 border border-white/5 text-white outline-none focus:border-cyan-500" type="email" placeholder="Email Address" required onChange={(e) => setFormData({...formData, email: e.target.value})} />
-          <select className="w-full p-3 rounded-xl bg-zinc-800 border border-white/5 text-slate-300 outline-none focus:border-cyan-500" required onChange={(e) => setFormData({...formData, occupation: e.target.value})}>
+          <input className="w-full p-3 rounded-xl bg-zinc-800 text-white outline-none" placeholder="Full Name" required onChange={(e) => setFormData({...formData, name: e.target.value})} />
+          <input className="w-full p-3 rounded-xl bg-zinc-800 text-white outline-none" placeholder="Username" required onChange={(e) => setFormData({...formData, username: e.target.value})} />
+          <input className="w-full p-3 rounded-xl bg-zinc-800 text-white outline-none" type="email" placeholder="Email" required onChange={(e) => setFormData({...formData, email: e.target.value})} />
+          <select className="w-full p-3 rounded-xl bg-zinc-800 text-slate-300 outline-none" required onChange={(e) => setFormData({...formData, occupation: e.target.value})}>
             <option value="">Select Occupation</option>
             <option value="Business Owner">Business Owner</option>
-            <option value="Accountant">Accountant</option>
-            <option value="Financial Analyst">Financial Analyst</option>
-            <option value="Tax Consultant">Tax Consultant</option>
-            <option value="SaaS Developer">SaaS Developer</option>
             <option value="Freelancer">Freelancer</option>
           </select>
-          <input className="w-full p-3 rounded-xl bg-zinc-800/50 border border-white/5 text-white outline-none focus:border-cyan-500" type="password" placeholder="Password" required onChange={(e) => setFormData({...formData, password: e.target.value})} />
-          <button type="submit" className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-zinc-200 transition-all active:scale-95 shadow-lg mt-2">Register</button>
+          <input className="w-full p-3 rounded-xl bg-zinc-800 text-white outline-none" type="password" placeholder="Password" required onChange={(e) => setFormData({...formData, password: e.target.value})} />
+          <button type="submit" className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-zinc-200 transition-all active:scale-95 shadow-lg">Register</button>
         </div>
         <p className="mt-8 text-center text-zinc-500 text-sm font-medium">Already have an account? <Link to="/login" className="text-cyan-500 font-bold hover:underline ml-1">Login here</Link></p>
       </form>
