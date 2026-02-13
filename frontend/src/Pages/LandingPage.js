@@ -1,120 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router'; 
+import { useNavigate } from 'react-router';
 import Sidebar from "../Components/Sidebar.js";
 import Navbar from "../Components/Navbar.js";
 import UploadCard from "../Components/UploadCard.js";
 import BusinessBackground from "../Components/BusinessBackground.js";
 
 function LandingPage() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [greeting, setGreeting] = useState('Welcome');
-  const [subText, setSubText] = useState('Modern intelligence for your business ledgers.');
-  
-  // State for persistent Revenue and OpEx
   const [isFileUploaded, setIsFileUploaded] = useState(false);
-  const [analysisData, setAnalysisData] = useState({
-    revenue: null,
-    opex: null
-  });
-
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const [analysisData, setAnalysisData] = useState({ revenue: null, opex: null });
 
   useEffect(() => {
     // 1. Maintain existing User Greeting logic
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    if (storedUser && storedUser.name) {
-      if (storedUser.isNew === true) {
-        setGreeting(`Welcome, ${storedUser.name}`);
-        setSubText('How can I help you today?');
-      } else {
-        setGreeting(`Welcome back, ${storedUser.name}`);
-        setSubText('How should I assist you today?');
-      }
-    }
+    const savedUser = JSON.parse(localStorage.getItem('user'));
+    if (savedUser) setGreeting(`Welcome back, ${savedUser.name}`);
 
-    // 2. NEW: Check for existing analysis data to keep cards visible
-    const savedRevenue = localStorage.getItem('analyzed_revenue');
-    const savedOpEx = localStorage.getItem('analyzed_opex');
-    
-    if (savedRevenue && savedOpEx) {
+    // 2. Persistent Data Check: Retrieve from storage so it doesn't reset
+    const savedRev = localStorage.getItem('analyzed_revenue');
+    const savedExp = localStorage.getItem('analyzed_opex');
+
+    if (savedRev && savedExp) {
       setIsFileUploaded(true);
-      setAnalysisData({
-        revenue: parseFloat(savedRevenue),
-        opex: parseFloat(savedOpEx)
+      setAnalysisData({ 
+        revenue: parseFloat(savedRev), 
+        opex: parseFloat(savedExp) 
       });
     }
-  }, []);
+  }, []); // Runs on mount to restore the view
 
-  // Updated to handle both initial upload and persistent storage
   const handleUploadSuccess = (data) => {
     setIsFileUploaded(true);
-    setAnalysisData({
-      revenue: data.revenue,
-      opex: data.opex
-    });
-
-    // Auto-redirect to performance page
-    setTimeout(() => {
-      navigate('/performance');
-    }, 1500);
+    setAnalysisData({ revenue: data.revenue, opex: data.opex });
+    // Transition to performance after a short delay
+    setTimeout(() => navigate('/performance'), 1500);
   };
 
   return (
     <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans">
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isFileUploaded={isFileUploaded} />
-
-      <div className={`flex-1 transition-all duration-300 ease-in-out relative z-10 flex flex-col ${isSidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
+        isFileUploaded={isFileUploaded}
+        onProjectLoad={(proj) => {
+          setIsFileUploaded(true);
+          setAnalysisData({ revenue: proj.revenue, opex: proj.opex });
+        }}
+      />
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <BusinessBackground />
         <Navbar />
-
-        <main className="flex-1 flex flex-col items-center pt-32 pb-20 px-10">
+        <main className="flex-1 flex flex-col items-center pt-32 px-10">
           
-          {/* Persistent Homepage KPIs: Only Revenue and OpEx */}
+          {/* Metrics Section: Now persists until logout */}
           {analysisData.revenue !== null && (
-            <div className="w-full max-w-2xl mb-12 animate-section grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Total Revenue Card */}
-              <div className="bg-white/80 border-2 border-white p-7 rounded-[2.5rem] shadow-xl backdrop-blur-xl flex justify-between items-center group hover:scale-[1.02] transition-all">
+            <div className="w-full max-w-2xl mb-12 grid grid-cols-2 gap-6 animate-section">
+              <div className="bg-white/80 p-7 rounded-[2.5rem] shadow-xl backdrop-blur-xl flex justify-between items-center border-2 border-white">
                 <div>
                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Total Revenue</p>
-                  <h3 className="text-4xl font-black text-slate-900">
-                    ${analysisData.revenue.toLocaleString()}
-                  </h3>
-                </div>
-                <div className="w-12 h-12 bg-cyan-500/10 rounded-2xl flex items-center justify-center text-cyan-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  <h3 className="text-4xl font-black text-slate-900">${analysisData.revenue.toLocaleString()}</h3>
                 </div>
               </div>
-
-              {/* Operating Expenses (OpEx) Card */}
-              <div className="bg-white/80 border-2 border-white p-7 rounded-[2.5rem] shadow-xl backdrop-blur-xl flex justify-between items-center group hover:scale-[1.02] transition-all">
+              <div className="bg-white/80 p-7 rounded-[2.5rem] shadow-xl backdrop-blur-xl flex justify-between items-center border-2 border-white">
                 <div>
                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Total OpEx</p>
-                  <h3 className="text-4xl font-black text-slate-900">
-                    ${analysisData.opex.toLocaleString()}
-                  </h3>
-                </div>
-                <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                  <h3 className="text-4xl font-black text-slate-900">${analysisData.opex.toLocaleString()}</h3>
                 </div>
               </div>
-
             </div>
           )}
 
-          <div className="text-center mb-16 animate-section">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{greeting}</h2>
-            <p className="text-slate-500 font-medium mb-8 italic">{subText}</p>
-            <h1 className="text-6xl md:text-7xl font-black tracking-tightest mb-4 leading-none text-slate-900">
-              Analyze. <span className="bg-gradient-to-r from-cyan-600 to-emerald-600 bg-clip-text text-transparent italic">Optimise.</span>
-            </h1>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">{greeting}</h2>
+            <h1 className="text-6xl font-black text-slate-900 mt-4 leading-tight">Analyze. <span className="bg-gradient-to-r from-cyan-600 to-emerald-600 bg-clip-text text-transparent italic">Optimise.</span></h1>
           </div>
 
-          <div className="w-full max-w-lg relative group">
-            <div className="relative bg-white/70 border-2 border-white p-12 rounded-[3rem] backdrop-blur-3xl shadow-2xl">
-              <UploadCard onUploadSuccess={handleUploadSuccess} />
-            </div>
+          <div className="w-full max-w-lg bg-white/70 p-12 rounded-[3rem] shadow-2xl backdrop-blur-3xl border-2 border-white">
+            <UploadCard onUploadSuccess={handleUploadSuccess} />
           </div>
         </main>
       </div>

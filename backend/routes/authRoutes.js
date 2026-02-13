@@ -45,10 +45,14 @@ router.post('/register', async (req, res) => {
       { expiresIn: '24h' }
     );
     
-    // 7. Return success
+    // 7. Return success - UPDATED to include user ID
     return res.status(201).json({ 
       token, 
-      user: { name: user.name, isNew: true },
+      user: { 
+        id: user._id, // Added ID for project linking
+        name: user.name, 
+        isNew: true 
+      },
       msg: "Registration Successful" 
     });
   } catch (err) {
@@ -57,7 +61,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// LOGIN ROUTE - FIXED SYNTAX ERROR HERE
+// LOGIN ROUTE
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -78,10 +82,11 @@ router.post('/login', async (req, res) => {
         const secret = process.env.JWT_SECRET || 'fallback_secret_for_dev_only';
         const token = jwt.sign({ id: user._id }, secret, { expiresIn: '24h' });
 
-        // Return user data with isNew: false for "Welcome Back" greeting
+        // Return user data - UPDATED to include user ID
         res.json({ 
             token, 
             user: { 
+                id: user._id, // Added ID for project linking
                 name: user.name, 
                 isNew: false 
             } 

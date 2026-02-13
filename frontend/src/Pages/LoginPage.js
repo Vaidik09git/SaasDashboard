@@ -8,29 +8,21 @@ function LoginPage() {
   const [message, setMessage] = useState(""); // Restored for pop-up
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { username, password });
-      
-      if (res.data.token) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify({ 
-          name: res.data.user.name, 
-          isNew: false 
-        }));
-
-        // Restored Animated Pop-up Logic
-        setMessage("✅ Login Successful! Redirecting...");
-
-        setTimeout(() => {
-          navigate("/"); 
-        }, 2000);
-      }
-    } catch (err) {
-      alert("❌ " + (err.response?.data?.msg || "Login Failed"));
+  // Change in handleLogin function
+const handleLogin = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await axios.post("http://localhost:5000/api/auth/login", { username, password });
+    if (res.data.token) {
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify({ name: res.data.user.name, isNew: false }));
+      setMessage("✅ Login Successful! Redirecting...");
+      setTimeout(() => navigate("/dashboard"), 2000); // Redirect to new dashboard route
     }
-  };
+  } catch (err) {
+    alert("❌ " + (err.response?.data?.msg || "Login Failed"));
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-6">
